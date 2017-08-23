@@ -7,7 +7,7 @@
 
 /*DEFAULT CONFIGURATIONS*/
 
-#define MQTT_HOST			"119.29.92.236" //or "mqtt.yourdomain.com"
+#define MQTT_HOST			"52.14.229.28" //or "mqtt.yourdomain.com"
 #define MQTT_PORT			1883
 #define MQTT_BUF_SIZE		1024
 #define MQTT_KEEPALIVE		120	 /*second*/
