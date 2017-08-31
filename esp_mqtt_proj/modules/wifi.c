@@ -47,6 +47,7 @@ static void ICACHE_FLASH_ATTR wifi_check_ip(void *arg)
 		{
 
 			INFO("STATION_NO_AP_FOUND\r\n");
+			// TODO: Reconnect 
 			wifi_station_connect();
 
 

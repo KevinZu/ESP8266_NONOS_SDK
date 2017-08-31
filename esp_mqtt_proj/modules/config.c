@@ -89,8 +89,8 @@ CFG_Load()
 
 		os_sprintf(sysCfg.device_id, MQTT_CLIENT_ID, system_get_chip_id());
 		sysCfg.device_id[sizeof(sysCfg.device_id) - 1] = '\0';
-		os_strncpy(sysCfg.sta_ssid, STA_SSID, sizeof(sysCfg.sta_ssid) - 1);
-		os_strncpy(sysCfg.sta_pwd, STA_PASS, sizeof(sysCfg.sta_pwd) - 1);
+		//os_strncpy(sysCfg.sta_ssid, STA_SSID, sizeof(sysCfg.sta_ssid) - 1);
+		//os_strncpy(sysCfg.sta_pwd, STA_PASS, sizeof(sysCfg.sta_pwd) - 1);
 		sysCfg.sta_type = STA_TYPE;
 
 		os_strncpy(sysCfg.mqtt_host, MQTT_HOST, sizeof(sysCfg.mqtt_host) - 1);
@@ -107,4 +107,25 @@ CFG_Load()
 		CFG_Save();
 	}
 
+}
+
+void ICACHE_FLASH_ATTR
+CFGSaveSsidAndPwd(uint8_t sta_ssid[],uint8_t sta_pwd[])
+
+{
+	os_printf("++++ %s\n",__FUNCTION__);
+	spi_flash_read((CFG_LOCATION + 3) * SPI_FLASH_SEC_SIZE,
+				   (uint32 *)&saveFlag, sizeof(SAVE_FLAG));
+	if (saveFlag.flag == 0) {
+		spi_flash_read((CFG_LOCATION + 0) * SPI_FLASH_SEC_SIZE,
+					   (uint32 *)&sysCfg, sizeof(SYSCFG));
+	} else {
+		spi_flash_read((CFG_LOCATION + 1) * SPI_FLASH_SEC_SIZE,
+					   (uint32 *)&sysCfg, sizeof(SYSCFG));
+	}
+
+	os_strncpy(sysCfg.sta_ssid, sta_ssid, 32);
+	os_strncpy(sysCfg.sta_pwd, sta_pwd, 64);
+
+	CFG_Save();
 }

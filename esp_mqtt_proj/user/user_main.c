@@ -94,84 +94,7 @@ void mqttDataCb(uint32_t *args, const char* topic, uint32_t topic_len, const cha
 	os_free(topicBuf);
 	os_free(dataBuf);
 }
-#if 0
 
-/******************************************************************************
- * FunctionName : user_rf_cal_sector_set
- * Description  : SDK just reversed 4 sectors, used for rf init data and paramters.
- *                We add this function to force users to set rf cal sector, since
- *                we don't know which sector is free in user's application.
- *                sector map for last several sectors : ABCCC
- *                A : rf cal
- *                B : rf init data
- *                C : sdk parameters
- * Parameters   : none
- * Returns      : rf cal sector
- *******************************************************************************/
-uint32 ICACHE_FLASH_ATTR
-user_rf_cal_sector_set(void)
-{
-    enum flash_size_map size_map = system_get_flash_size_map();
-    uint32 rf_cal_sec = 0;
-
-    switch (size_map) {
-        case FLASH_SIZE_4M_MAP_256_256:
-            rf_cal_sec = 128 - 5;
-            break;
-
-        case FLASH_SIZE_8M_MAP_512_512:
-            rf_cal_sec = 256 - 5;
-            break;
-
-        case FLASH_SIZE_16M_MAP_512_512:
-        case FLASH_SIZE_16M_MAP_1024_1024:
-            rf_cal_sec = 512 - 5;
-            break;
-
-        case FLASH_SIZE_32M_MAP_512_512:
-        case FLASH_SIZE_32M_MAP_1024_1024:
-            rf_cal_sec = 1024 - 5;
-            break;
-
-        case FLASH_SIZE_64M_MAP_1024_1024:
-            rf_cal_sec = 2048 - 5;
-            break;
-        case FLASH_SIZE_128M_MAP_1024_1024:
-            rf_cal_sec = 4096 - 5;
-            break;
-        default:
-            rf_cal_sec = 0;
-            break;
-    }
-
-    return rf_cal_sec;
-}
-
-
-void user_init(void)
-{
-	uart_init(BIT_RATE_115200, BIT_RATE_115200);
-	os_delay_us(60000);
-
-	CFG_Load();
-
-	MQTT_InitConnection(&mqttClient, sysCfg.mqtt_host, sysCfg.mqtt_port, sysCfg.security);
-	//MQTT_InitConnection(&mqttClient, "192.168.11.122", 1880, 0);
-
-	MQTT_InitClient(&mqttClient, sysCfg.device_id, sysCfg.mqtt_user, sysCfg.mqtt_pass, sysCfg.mqtt_keepalive, 1);
-	//MQTT_InitClient(&mqttClient, "client_id", "user", "pass", 120, 1);
-
-	MQTT_InitLWT(&mqttClient, "/lwt", "offline", 0, 0);
-	MQTT_OnConnected(&mqttClient, mqttConnectedCb);
-	MQTT_OnDisconnected(&mqttClient, mqttDisconnectedCb);
-	MQTT_OnPublished(&mqttClient, mqttPublishedCb);
-	MQTT_OnData(&mqttClient, mqttDataCb);
-
-	WIFI_Connect(sysCfg.sta_ssid, sysCfg.sta_pwd, wifiConnectCb);
-
-	INFO("\r\nSystem started ...\r\n");
-}
-#else
 
 #include "ets_sys.h"
 #include "gpio.h"
@@ -321,6 +244,9 @@ smartconfig_done(sc_status status, void *pdata)
 	//uint8 password[65];
 	//for(i = 0;i < 33;i ++)ssid[i]=0;
 	//for(i = 0;i < 65;i ++)password[i] = 0;
+	int i;
+	static uint8 ssid[32];
+	static uint8 password[64];
 	
     switch(status) {
         case SC_STATUS_WAIT:
@@ -342,11 +268,10 @@ smartconfig_done(sc_status status, void *pdata)
             os_printf("SC_STATUS_LINK\n");
             struct station_config *sta_conf = pdata;
 
-		//for(i = 0;i < 32;i ++)ssid[i]=sta_conf->ssid[i];
-		//for(i=0;i<64;i++)password[i] = sta_conf->password[i];
-		os_printf("ssid: %s\n",sta_conf->ssid);
-		os_printf("password: %s\n",sta_conf->password);
-		// TODO:  To store ssid and password.
+		
+		for(i = 0;i < 32;i ++)ssid[i] = sta_conf->ssid[i];
+		for(i = 0;i < 64;i ++)password[i] = sta_conf->password[i];
+			
 
 	        wifi_station_set_config(sta_conf);
 	        wifi_station_disconnect();
@@ -355,6 +280,8 @@ smartconfig_done(sc_status status, void *pdata)
             break;
         case SC_STATUS_LINK_OVER:
             os_printf("SC_STATUS_LINK_OVER\n");
+
+			CFGSaveSsidAndPwd(ssid,password);
             if (pdata != NULL) {
 				//SC_TYPE_ESPTOUCH
                 uint8 phone_ip[4] = {0};
@@ -366,7 +293,8 @@ smartconfig_done(sc_status status, void *pdata)
 				airkiss_start_discover();
             }
             smartconfig_stop();
-	system_restart();
+	//MQTT_Disconnect(&mqttClient);
+	//system_restart();
             break;
     }
 	
@@ -508,7 +436,6 @@ void user_init(void)
 
 	my_key_init();
 
-#if 1
 
 //	smartconfig_set_type(SC_TYPE_ESPTOUCH); //SC_TYPE_ESPTOUCH,SC_TYPE_AIRKISS,SC_TYPE_ESPTOUCH_AIRKISS
 //	wifi_set_opmode(STATION_MODE);
@@ -530,7 +457,6 @@ void user_init(void)
 	MQTT_OnData(&mqttClient, mqttDataCb);
 
 	WIFI_Connect(sysCfg.sta_ssid, sysCfg.sta_pwd, wifiConnectCb);
-#endif
 
 	INFO("\r\nSystem started ...\r\n");
 
@@ -539,4 +465,3 @@ void user_init(void)
 void user_rf_pre_init(){}
 
 
-#endif

@@ -48,7 +48,7 @@ key_init_single(uint8 gpio_id, uint32 gpio_name, uint8 gpio_func, key_function l
 {
     struct single_key_param *single_key = (struct single_key_param *)os_zalloc(sizeof(struct single_key_param));
 	
-	os_printf("+++ %s	 single_key: 0x%x       gpio_id:%d   gpio_name:%d    gpio_func:%d     lone_press:0x%x      short_press : 0x%x \n",__FUNCTION__,single_key,gpio_id,gpio_name,gpio_func,long_press,short_press);
+	//os_printf("+++ %s	 single_key: 0x%x       gpio_id:%d   gpio_name:%d    gpio_func:%d     lone_press:0x%x      short_press : 0x%x \n",__FUNCTION__,single_key,gpio_id,gpio_name,gpio_func,long_press,short_press);
 
     single_key->gpio_id = gpio_id;
     single_key->gpio_name = gpio_name;
